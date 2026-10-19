@@ -1,0 +1,101 @@
+name: Проверка Kanban
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt pytest==9.1.1 pytest-cov==7.1.0 httpx==0.28.1 playwright==1.51.0 ruff==0.17.1 pip-audit==2.10.1
+      - name: Lint
+        run: ruff check --isolated --select E4,E7,E9,F .
+      - name: Unit tests
+        run: python -m pytest tests/test_api.py -k 'test_role_rule or test_task_validation or test_migration_and_repository' --cov=app --cov=services --cov=db --cov-branch --cov-fail-under=0
+      - name: Build
+        run: python -m compileall -q app.py services.py db.py
+      - name: Integration and API tests
+        run: |
+          mkdir -p reports
+          python -m pytest tests/test_api.py -k 'not (test_role_rule or test_task_validation or test_migration_and_repository)' --cov=app --cov=services --cov=db --cov-branch --cov-fail-under=80 --cov-append --cov-report=xml:reports/coverage.xml --cov-report=json:reports/coverage.json --junitxml=reports/api.xml
+          python -c "import json; t=json.load(open('reports/coverage.json'))['totals']; assert t['covered_lines']/t['num_statements'] >= .8; assert t['covered_branches']/t['num_branches'] >= .7"
+      - name: E2E in Chromium, Firefox and Edge
+        run: |
+          python -m playwright install --with-deps chromium firefox msedge
+          E2E_BROWSERS=chromium,firefox,msedge python tests/e2e.py
+      - name: Dependency security scan
+        run: pip-audit -r requirements.txt -f json -o reports/audit.json
+      - name: ZAP security scan
+        run: |
+          uvicorn app:app --host 0.0.0.0 --port 8000 > /tmp/kanban.log 2>&1 &
+          python -c "import time,urllib.request; time.sleep(2); urllib.request.urlopen('http://localhost:8000/api/health')"
+          chmod 777 reports
+          docker run --rm --network host -v "$PWD/reports:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://127.0.0.1:8000 -r zap.html -I
+      - name: Package
+        run: tar --exclude=.git --exclude=.venv --exclude=data --exclude=reports --exclude=.coverage --exclude=__pycache__ -czf /tmp/kanban-source.tgz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kanban-source
+          path: /tmp/kanban-source.tgz
+      - name: Reports and traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: reports/
+      - name: Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: reports/coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+  staging:
+    needs: checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: kanban-source
+      - name: Deploy staging
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+          scp kanban-source.tgz "$DEPLOY_USER@$DEPLOY_HOST:/tmp/kanban-source.tgz"
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" 'mkdir -p ~/kanban && tar -xzf /tmp/kanban-source.tgz -C ~/kanban && cd ~/kanban && .venv/bin/pip install -r requirements.txt && systemctl --user restart kanban && systemctl --user is-active --quiet kanban'
+  production:
+    needs: staging
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: kanban-source
+      - name: Deploy production
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_ed25519 ~/.ssh/known_hosts
+          scp kanban-source.tgz "$DEPLOY_USER@$DEPLOY_HOST:/tmp/kanban-source.tgz"
+          ssh "$DEPLOY_USER@$DEPLOY_HOST" 'mkdir -p ~/kanban && tar -xzf /tmp/kanban-source.tgz -C ~/kanban && cd ~/kanban && .venv/bin/pip install -r requirements.txt && systemctl --user restart kanban && systemctl --user is-active --quiet kanban'
