@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kanban-доска</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/script.js" defer></script>
+</head>
+<body>
+<header><h1>Kanban-доска</h1><div id="account" hidden><span id="user-name"></span><button id="users-button" hidden>Участники</button><button id="logout">Выйти</button></div></header>
+<p id="message" role="status" aria-live="polite" hidden></p>
+<section id="auth" class="login">
+  <h2 id="auth-title">Вход</h2>
+  <p>Учебная доска для задач команды</p>
+  <form id="auth-form">
+    <label id="name-label" hidden>Имя<input id="name" maxlength="100" autocomplete="name"></label>
+    <label>Email<input id="email" type="email" required maxlength="150" autocomplete="username"></label>
+    <label>Пароль<input id="password" type="password" required minlength="8" maxlength="72" autocomplete="current-password"></label>
+    <button type="submit" class="primary" id="auth-submit">Войти</button>
+    <button type="button" id="auth-toggle">Создать аккаунт</button>
+  </form>
+  <small>Первый аккаунт получает роль администратора.</small>
+</section>
+<main id="workspace" hidden>
+  <section class="toolbar">
+    <div class="select-group"><label>Проект<select id="project"></select></label><div data-manage><button id="project-add">+ Проект</button><button id="project-edit">Изменить</button><button id="project-delete" class="danger">Удалить</button></div></div>
+    <div class="select-group"><label>Доска<select id="board"></select></label><div data-manage><button id="board-add">+ Доска</button><button id="board-edit">Изменить</button><button id="board-delete" class="danger">Удалить</button></div></div>
+    <button id="column-add" data-manage>+ Колонка</button>
+    <button id="task-add" class="primary">+ Задача</button>
+  </section>
+  <p id="project-description" class="muted"></p>
+  <section class="filters" aria-label="Фильтры задач">
+    <label>Поиск<input id="search" placeholder="Название или описание" maxlength="100"></label>
+    <label>Исполнитель<select id="filter-assignee"><option value="">Все</option></select></label>
+    <label>Приоритет<select id="filter-priority"><option value="">Любой</option><option value="high">Высокий</option><option value="medium">Средний</option><option value="low">Низкий</option></select></label>
+    <label>Метка<input id="filter-label" placeholder="Например, учёба" maxlength="100"></label>
+    <button id="reset">Сбросить</button><button id="refresh">Обновить</button>
+  </section>
+  <p class="muted">Перетащите карточку в другую колонку. Ещё колонку можно выбрать в самой задаче.</p>
+  <div id="pagination" class="actions" hidden><button id="prev-page">← Назад</button><span id="page-info"></span><button id="next-page">Дальше →</button></div>
+  <section id="columns" class="columns" aria-label="Kanban-доска"></section>
+</main>
+<dialog id="structure-dialog">
+  <form id="structure-form">
+    <h2 id="structure-title"></h2>
+    <label>Название<input id="structure-name" required maxlength="100"></label>
+    <label id="description-label">Описание<textarea id="structure-description" maxlength="3000" rows="3"></textarea></label>
+    <label id="wip-label">WIP-лимит (0 = без лимита)<input id="structure-wip" type="number" min="0" max="10000" value="0" required></label>
+    <div class="actions"><button class="primary">Сохранить</button><button type="button" data-close="structure-dialog">Отмена</button></div>
+  </form>
+</dialog>
+<dialog id="task-dialog">
+  <form id="task-form">
+    <h2 id="task-heading">Новая задача</h2>
+    <label>Название<input id="task-title" required maxlength="100"></label>
+    <label>Описание<textarea id="task-description" maxlength="5000" rows="3"></textarea></label>
+    <div class="two-fields"><label>Колонка<select id="task-column"></select></label><label>Исполнитель<select id="task-assignee"></select></label></div>
+    <div class="two-fields"><label>Приоритет<select id="task-priority"><option value="medium">Средний</option><option value="high">Высокий</option><option value="low">Низкий</option></select></label><label>Срок<input id="task-due" type="date"></label></div>
+    <label>Метки через запятую<input id="task-labels" maxlength="200" placeholder="учёба, интерфейс"></label>
+    <div class="actions"><button class="primary">Сохранить</button><button type="button" id="task-delete" class="danger">Удалить</button><button type="button" data-close="task-dialog">Закрыть</button></div>
+  </form>
+  <section id="task-extra" hidden>
+    <h3>Комментарии</h3><div id="comments"></div>
+    <form id="comment-form" class="inline-form"><input id="comment-text" aria-label="Текст комментария" placeholder="Написать комментарий" required maxlength="2000"><button>Отправить</button></form>
+    <h3>Вложения</h3><div id="attachments"></div>
+    <form id="file-form" class="inline-form"><input id="file" type="file" aria-label="Вложение" accept=".txt,.pdf,.png,.jpg,.jpeg" required><button>Прикрепить</button></form>
+    <small>TXT, PDF, PNG или JPG, до 5 МБ.</small>
+    <h3>История действий</h3><div id="history"></div>
+  </section>
+</dialog>
+<dialog id="users-dialog"><h2>Участники</h2><p>Все участники работают с общими проектами.</p><div id="users-list"></div><button data-close="users-dialog">Закрыть</button></dialog>
+<footer>Выполнили: Загайнов Александр, Воронов Савва, Серикова Анастасия</footer>
+</body>
+</html>
