@@ -1,0 +1,71 @@
+/* Общие цвета и отступы */
+* { box-sizing: border-box; }
+body { margin: 0; background: #f2f4f8; color: #253149; font: 16px Arial, sans-serif; }
+header { background: #254f92; color: white; padding: 18px 28px; display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+h1 { font-size: 24px; margin: 0; }
+h2 { font-size: 23px; margin-top: 0; }
+h3 { font-size: 17px; }
+main { padding: 22px 28px; }
+button, input, select, textarea { font: inherit; border: 1px solid #c8cfdb; border-radius: 5px; padding: 9px 11px; }
+button { background: white; color: #253149; cursor: pointer; }
+button:hover { background: #e9effa; border-color: #6a8bbb; }
+button:disabled { opacity: .45; cursor: default; }
+button.primary { background: #254f92; color: white; border-color: #254f92; }
+button.primary:hover { background: #193d77; }
+button.danger { color: #a32932; }
+input, select, textarea { background: white; color: #253149; min-width: 0; width: 100%; }
+textarea { resize: vertical; }
+label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+small, .muted { color: #5e6b80; font-size: 13px; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid #7ba4e4; outline-offset: 2px; }
+#account { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#message { position: fixed; z-index: 10; bottom: 16px; left: 16px; right: 16px; margin: 0; border: 1px solid #bd3a43; background: #fff0f1; color: #8d1c25; padding: 14px; border-radius: 6px; box-shadow: 0 3px 12px #0002; }
+#message.success { background: #edf8f0; color: #215d33; border-color: #6ba37a; }
+.login { margin: 65px auto; width: min(400px, 92%); background: white; padding: 28px; border: 1px solid #dce1e9; border-radius: 8px; }
+.login form, #structure-form, #task-form { display: grid; gap: 14px; }
+.login small { display: block; margin-top: 20px; }
+.toolbar, .filters, .select-group { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
+.select-group label { min-width: 190px; }
+.select-group div { display: flex; gap: 5px; }
+.filters { margin: 20px 0 10px; padding: 16px; background: white; border: 1px solid #dce1e9; border-radius: 7px; }
+.filters label { flex: 1; min-width: 150px; }
+/* Колонки и карточки */
+.columns { display: flex; gap: 18px; align-items: flex-start; overflow-x: auto; padding-bottom: 20px; min-height: 340px; }
+.column { background: #e5eaf2; border: 1px solid #d7deea; border-radius: 7px; padding: 12px; width: 310px; flex-shrink: 0; min-height: 240px; }
+.column.drag-over { background: #d6e5fb; border: 1px dashed #254f92; }
+.column h2 { font-size: 17px; display: flex; justify-content: space-between; gap: 8px; margin: 3px 0 12px; }
+.column-tools { display: flex; gap: 4px; margin-bottom: 12px; }
+.column-tools button { padding: 5px 8px; font-size: 12px; }
+.card { background: white; border: 1px solid #d5dce8; border-left: 4px solid #8497b5; border-radius: 5px; padding: 14px; margin-bottom: 10px; cursor: grab; box-shadow: 0 2px 4px #2531490a; }
+.card:hover { border-color: #6486b9; box-shadow: 0 3px 9px #2531491a; }
+.card.high { border-left-color: #bd3a43; }
+.card.low { border-left-color: #428565; }
+.card h3 { margin: 0 0 12px; overflow-wrap: anywhere; }
+.card p { margin: 7px 0 0; font-size: 13px; overflow-wrap: anywhere; }
+.card .overdue { color: #a32932; }
+.empty { color: #5e6b80; font-size: 14px; padding: 12px 0; }
+/* Окна задачи и настроек */
+dialog { border: 1px solid #c8cfdb; border-radius: 8px; padding: 25px; width: min(600px, 94vw); max-height: 90vh; color: #253149; }
+dialog::backdrop { background: #16203980; }
+.two-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.actions, .inline-form { display: flex; gap: 8px; flex-wrap: wrap; }
+.inline-form input { flex: 1; min-width: 160px; }
+.entry { font-size: 14px; background: #f2f4f8; padding: 10px; margin-bottom: 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.entry small { display: block; margin-bottom: 6px; }
+.file-row, .user-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.file-row button:first-child { flex: 1; text-align: left; overflow-wrap: anywhere; }
+.user-row span { flex: 1; overflow-wrap: anywhere; }
+.user-row select { width: 165px; }
+footer { padding: 20px 28px; color: #5e6b80; font-size: 12px; }
+@media (max-width: 700px) {
+  header { align-items: flex-start; flex-direction: column; padding: 18px; }
+  main { padding: 16px; }
+  .toolbar, .select-group { align-items: stretch; }
+  .select-group { width: 100%; }
+  .select-group label { flex: 1; }
+  .two-fields { grid-template-columns: 1fr; }
+  .column { width: 285px; }
+  .user-row { flex-wrap: wrap; }
+}
+.dialog-message { color: #8d1c25; background: #fff0f1; padding: 10px; border-radius: 5px; }
